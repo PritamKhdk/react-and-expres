@@ -1,65 +1,90 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 export default function Database() {
   const [data, setData] = useState([]);
+  const [update, setupdate] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [input, setInput] = useState("");
   const [showTextBox, setShowTextBox] = useState(false);
-
-
+  const [firstinput, setFirstInput] = useState("");
+  const [secondtinput, setSecondInput] = useState("");
+ 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/get-data");
+        try {
+        const response = await axios.get("http://localhost:3000/get_data",{
+          headers: {
+            "Content-Type": "application/json",
+            "x-access-token": Cookies.get("token"),
+          }
+        });
         setData(response?.data?.result);
-      } 
-      
+       }
       catch (error) {
         console.error(error);
       }
     };
     fetchData();
-  }, []);
+  }, [update,]);
+
 
   function handleEdit(id) {
     setEditId(id);  
     setShowTextBox(!showTextBox);
-    
   }
 
+
   function handleChange(event) {
-    setInput(event.target.value);
-  }
- 
-    function handleClick() {
-     try {
-        axios.put(`http://localhost:3000/put_data`, {
-         id: editId,
-         Name: input,
-       });
-       setData(data.map(element => {
+    if(event.target.name==='firstinput'){
+      setFirstInput(event.target.value)
+    }else if(event.target.name ==='secondinput'){
+      setSecondInput(event.target.value)
+    }
+  
+  } 
+   function handleClick() {
+    try {
+       axios.put(
+        `http://localhost:3000/put_data`,
+        {
+          id: editId,
+          name: firstinput,
+          caste: secondtinput,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-access-token": Cookies.get("token"),
+          },
+        }
+      );
+      setData(data.map(element => {
         if (element.id === editId) {
-          return { ...element, Name: input };
+          return { ...element, Name: firstinput,Caste:secondtinput };
         }
         return element;
       }));
-      } catch (error) {
-        console.error(error);
-      }
-      setInput("")
-   }
-
-    function handleDelete(id) {
-    try {
-     axios.delete(`http://localhost:3000/delete?id=${id}`);
-     setData(data.filter((element) => element.id !== id));
+  
+      setFirstInput("");
+      setSecondInput("");
     } catch (error) {
       console.error(error);
     }
   }
 
+  
+    function handleDelete(id) {
+    try {
+     axios.delete(`http://localhost:3000/delete?id=${id}`);
+     setupdate(!update)
+  
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
   const navigate = useNavigate()
 
   return (
@@ -68,18 +93,32 @@ export default function Database() {
     <ul className="data-list">
       {data.map((element) => (
         <li key={element.id} className="list-item">
-          {element.Name}
+          {element.Name} {element.Caste}
           <button className="edit-button" onClick={() => handleEdit(element.id)}>
             Edit
           </button>
           {showTextBox && editId === element.id && (
             <>
+            <label>
+            First Name:
               <input
                 type="text"
-                value={input}
+                name="firstinput"
+                value={firstinput}
                 onChange={handleChange}
                 className="edit-input"
               />
+            </label>
+              <label>
+              Last Name:
+               <input
+                type="text"
+                name="secondinput"
+                value={secondtinput}
+                onChange={handleChange}
+                className="edit-input"
+              />
+              </label>
               <button className="done-button" onClick={handleClick}>
                 Done
               </button>
@@ -91,10 +130,10 @@ export default function Database() {
         </li>
       ))}
     </ul>
-
     <button className="add-user-button" onClick={() => navigate('/myform')}>
       Add User
     </button>
   </>
   );
 }
+

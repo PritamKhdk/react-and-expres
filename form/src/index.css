@@ -69,6 +69,7 @@ h1 {
 
 .add-user-button:hover {
   background-color: #45a049;
+  border-radius: 20px;
 }
 
 .edit-input {
