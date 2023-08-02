@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 const MyForm = () => {
   const [name, setName] = useState('');
   const[caste,setCaste] =useState('');
+  const[message,setMessage]=useState('')
 
   const handleChange = (event) => {
     if(event.target.name ==='name'){
@@ -29,26 +30,35 @@ const MyForm = () => {
      {
       headers: {
         "Content-Type": "application/json",
-        "x-access-token": Cookies.set("token"),
+        "authorization": Cookies.set("token"),
       }
     })
       .then(function(response) {
         console.log(response);
          Cookies.set("token", response.data.token)
-        return response.data;
+         
+          setMessage(response.data)
+          return response.data;
 
       })
       .then(function(data) {
         console.log(data);
+        setMessage("Saved to database")
+    
       })
       .catch(function(error) {
         console.error('Error:', error);
+        setMessage('Error adding data to the database.');
+        Cookies.remove("token")
+        
       });
   }
   const navigate = useNavigate(); 
 
   return (
     <>
+     <div className="App">
+      <h1>Signin</h1>
     <form onSubmit={handleSubmit}>
       <label>
         Name:
@@ -62,6 +72,11 @@ const MyForm = () => {
     </form>
 
     <button onClick={()=>{navigate('/database') }}>To DATABASE</button>
+
+    {message && <p>{message}</p>}
+    
+
+    </div>
     </>
   );
 }

@@ -17,7 +17,7 @@ export default function Database() {
         const response = await axios.get("http://localhost:3000/get_data",{
           headers: {
             "Content-Type": "application/json",
-            "x-access-token": Cookies.get("token"),
+            'authorization': `Bearer ${Cookies.get('token')}`
           }
         });
         setData(response?.data?.result);
@@ -29,12 +29,10 @@ export default function Database() {
     fetchData();
   }, [update,]);
 
-
   function handleEdit(id) {
     setEditId(id);  
     setShowTextBox(!showTextBox);
   }
-
 
   function handleChange(event) {
     if(event.target.name==='firstinput'){
@@ -56,7 +54,7 @@ export default function Database() {
         {
           headers: {
             "Content-Type": "application/json",
-            "x-access-token": Cookies.get("token"),
+            'authorization': `Bearer ${Cookies.get('token')}`,
           },
         }
       );
@@ -74,10 +72,13 @@ export default function Database() {
     }
   }
 
-  
     function handleDelete(id) {
     try {
-     axios.delete(`http://localhost:3000/delete?id=${id}`);
+     axios.delete(`http://localhost:3000/delete?id=${id}`,{
+     headers: {
+      "Content-Type": "application/json",
+      'authorization': `Bearer ${Cookies.get('token')}`,
+    }});
      setupdate(!update)
   
     } catch (error) {
