@@ -1,54 +1,45 @@
-Styling for the App container
-.App {
-  
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    margin-top: 160px;
-    height: 400px;
-  }
-  
+.login-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  background-color: #f2f2f2;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: 400px;
+  margin: auto;
+  margin-top: 160px;
+}
 
-  h1 {
-    text-align: center;
-    color: #333;
-  }
-  
-  
-  label {
-    display: block;
-    margin-bottom: 5px;
-    color: #555;
-  }
-  
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
 
-  input[type="text"] {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-  
+label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
 
-  button[type="submit"] {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  Styling for the loginResult message
-  div {
-    margin-top: 10px;
-    text-align: center;
-    color: #007bff;
-    font-weight: bold;
-  }
-  
+
+input[type="text"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #1a77ff;
+}
+
+.btn {
+  /* background-color: #1a77ff; */
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #005dff;
+}
+
+.login-result {
+  margin-top: 1rem;
+}
