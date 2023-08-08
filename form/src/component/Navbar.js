@@ -24,24 +24,3 @@ function NavBars() {
 
 export default NavBars;
 
-
-
-
-// const[singout,setSignout]=useState(false)
-// const navigate = useNavigate();
-//   const handleSignout = () => {
-  //     Cookies.remove('login',"token");
-  //     Cookies.remove("token","value");
-  //     localStorage.removeItem("token","login")
-  //     localStorage.removeItem("login","true")
-  //     Cookies.remove('myCookie',"value")
-  //     navigate('/login');
-  //     setSignout(!singout)
-  // }
-  // useEffect(() => {
-    // console.log("sign",singout)
-    // }, [singout])
-    
-    // import { useNavigate } from 'react-router-dom';
-    // import Cookies from 'js-cookie';
-    // import React,{useEffect, useState} from 'react';

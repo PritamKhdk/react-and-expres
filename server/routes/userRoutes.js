@@ -4,46 +4,95 @@ const jwt = require("jsonwebtoken");
 const conn = require("../database");
 require("dotenv").config();
 const {authenticateJWT} = require("../middlewares/authMiddleware");
-// const Cookies = require("cookies");
-const { token } = require("morgan");
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10; 
 
 app.post("/store_data", (req, res) => {
   const data = { 
-                 name: req.body.name,
-                 caste:req?.body?.caste,
-                };
+    name: req.body.name,
+    caste: req?.body?.caste,
+  };
 
-  if(data.name =="" && data.caste=="" ){
-      return res.json({ message: "black name or caste" })
-   }
-  const secret =process.env.SECRET
-  const selectq = `Select * from userdata Where Name = '${data.name}' AND Caste = '${data.caste}' `
-  const sql = "INSERT INTO userdata SET ?"; 
-  conn.query(selectq,data,(err,result)=>{
+  if (data.name === "" || data.caste === "") {
+    return res.json({ message: "Blank name or caste" });
+  }
+
+  const secret = process.env.SECRET;
+  const selectq = "SELECT * FROM userdata WHERE Name = ?";
+  const insertq = "INSERT INTO userdata (Name, Caste) VALUES (?, ?)";
+
+  conn.query(selectq, [data.name], (err, result) => {
     if (err) throw err;
 
-    if(result.length > 0){
-      res.send({message:"data exist"})
-     }
-    else{
-     conn.query(sql, data, (err,insertResult) => {
-      if (err) {
-        if (err.code === "ER_DUP_ENTRY") {
-         res.send({ message: "Duplicate entry" });
-         }else {
-           throw err;
-           }
-            } else {
-              const idData = insertResult.insertId; 
-              const token = jwt.sign({idData}, secret,{ expiresIn: "0s" });
-              res.send(JSON.stringify({ status: 200, error: null, data,token}));
-            }
-          });
-     
-      }
-    });
-    })
+    if (result.length > 0) {
+      res.send({ message: "Data already exists" });
+    } else {
+      bcrypt.hash(data.caste, saltRounds, (err, hash) => {
+        if (err) throw err;
 
+        conn.query(insertq, [data.name, hash], (err, insertResult) => {
+          if (err) {
+            if (err.code === "ER_DUP_ENTRY") {
+              res.send({ message: "Duplicate entry" });
+            } else {
+              throw err;
+            }
+          } else {
+            const idData = insertResult.insertId; 
+            const token = jwt.sign({ idData }, secret, { expiresIn: "100s" });
+            res.send(JSON.stringify({ status: 200, error: null, data: data, token}));
+          }
+        });
+      });
+    }
+  });
+});
+
+app.post("/login", (req, res) => {
+  const { name, caste } = req.body;
+  const secret = process.env.SECRET;
+  const refreshSecret = process.env.Refresh; 
+
+  const selectq = `SELECT * FROM userdata WHERE Name = ?`;
+
+  conn.query(selectq, [name], (err, result) => {
+    if (err) {
+      console.error("Error occurred during login:", err);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+
+    if (result.length === 0) {
+      return res.json({ success: false, message: "User not found" });
+    }
+    console.log(result)
+    const storedHashedCaste = result[0].Caste;
+    console.log("Stored hashed caste:", storedHashedCaste);
+    bcrypt.compare(caste, storedHashedCaste, (bcryptErr, isMatch) => {
+      if (bcryptErr) {
+        console.error("Error occurred during bcrypt comparison:", bcryptErr);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+      }
+
+      if (!isMatch) {
+        return res.json({ success: false, message: "Incorrect caste" });
+      }
+      const idData = result[0].id;
+      const timestamp = Date.now();
+
+      const token = jwt.sign({ idData, timestamp }, secret, { expiresIn: "1h" }); 
+
+      const refreshToken = jwt.sign({ idData }, refreshSecret, { expiresIn: "7d" }); 
+
+
+      res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "strict" });
+      res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "strict" });
+      res.cookie("login", "true", { sameSite: "strict" });
+
+      return res.json({ success: true, message: "Login successful", token, refreshToken });
+    });
+  });
+});
 
 app.get("/get_data",authenticateJWT, (req, res) => {
   const userId = req.userId;
@@ -58,8 +107,6 @@ app.get("/get_data",authenticateJWT, (req, res) => {
     }
   });
 });
-
-
 
 app.put("/put_data",authenticateJWT,(req, res) => {
   const {name, caste } = req.body;
@@ -303,34 +350,11 @@ app.delete("/everydetdel", authenticateJWT, (req, res) => {
   });
 });
 
-app.post("/login", (req, res) => {
-  const { name, caste } = req.body;
-  const secret = process.env.SECRET;
-  const selectq = `SELECT * FROM userdata WHERE Name = ? AND Caste = ?`;
-
-  conn.query(selectq, [name, caste], (err, result) => {
-    if (err) {
-      console.error("Error occurred during login:", err);
-      return res.status(500).json({ success: false, message: "Internal server error" });
-    }
-
-    if (result.length > 0) {
-      const idData = result[0].id;
-      const timestamp = Date.now();
-      const token = jwt.sign({ idData, timestamp }, secret, { expiresIn: "180s" }); 
-      res.cookie("token", token, { httpOnly: true, secure: true }); 
-      res.cookie("login", "true");
-      return res.json({ success: true, message: "Login successful", token });
-    } else {
-      return res.json({ success: false, message: "User not found" });
-    }
-  });
-});
-
 app.get("/logout", authenticateJWT, (req, res) => {
   console.log("logout being hit");
-  res.clearCookie("token");
+  res.clearCookie("token",);
   res.clearCookie("login");
+  res.clearCookie("refreshToken")
   return res.status(200).json({ message: "Logged out successfully" });
 });
 

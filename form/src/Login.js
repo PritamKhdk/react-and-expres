@@ -24,10 +24,12 @@ export default function Login() {
         }
       });
       const data = response.data;
-      console.log("data",data.token)
+      console.log("data",response.data)
       if (data.success) {
         Cookies.set('token', data.token); 
         Cookies.set('login', true);
+        Cookies.set("refreshToken",data.refreshToken)
+        
         setLoginResult("Logged in successfully");
         navigate('/home');
       } else {
@@ -69,3 +71,5 @@ export default function Login() {
     </>
   );
 }
+
+

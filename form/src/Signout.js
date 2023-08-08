@@ -8,14 +8,17 @@ const Logout = () => {
   const handleLogout = async () => {
     console.log("logout being hit");
     try {
-      await axios.get('http://localhost:3000/logout', {
+      const response =  await axios.get('http://localhost:3000/logout', {
         headers: {
           "Content-Type": "application/json",
           'authorization': `Bearer ${Cookies.get('token')}`
         }
       });
+      console.log("logre",response)
+
       Cookies.remove("token");
       Cookies.remove("login");
+      Cookies.remove("refreshToken")
       navigate('/')
     } catch (error) {
       console.error("Error logging out:", error);
